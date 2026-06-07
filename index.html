@@ -1,0 +1,2070 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IPTV Forge</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Barlow+Condensed:wght@300;400;500;600;700;800;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #080b10;
+  --bg2:      #0c1018;
+  --bg3:      #111620;
+  --panel:    #0f1520;
+  --border:   rgba(0,200,255,0.10);
+  --border2:  rgba(0,200,255,0.20);
+  --border3:  rgba(0,200,255,0.35);
+  --cyan:     #00c8ff;
+  --cyan2:    #00eaff;
+  --orange:   #ff6b2b;
+  --orange2:  #ff8c50;
+  --green:    #00ff88;
+  --yellow:   #ffd84d;
+  --red:      #ff3b5c;
+  --tx:       #d4e8f0;
+  --tx2:      #7a9ab0;
+  --tx3:      #3a5468;
+  --mono:     'Space Mono', monospace;
+  --head:     'Barlow Condensed', sans-serif;
+  --body:     'Barlow', sans-serif;
+  --glow-c:   0 0 20px rgba(0,200,255,0.25);
+  --glow-o:   0 0 20px rgba(255,107,43,0.3);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; overflow:hidden; }
+
+body {
+  background: var(--bg);
+  color: var(--tx);
+  font-family: var(--body);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Scanline effect */
+body::after {
+  content:'';
+  position:fixed; inset:0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.03) 2px,
+    rgba(0,0,0,0.03) 4px
+  );
+  pointer-events:none;
+  z-index:9999;
+}
+
+/* Corner brackets decoration */
+.corner-tl, .corner-tr, .corner-bl, .corner-br {
+  position:fixed; width:24px; height:24px; z-index:100; pointer-events:none;
+}
+.corner-tl { top:8px; left:8px; border-top:2px solid var(--cyan); border-left:2px solid var(--cyan); opacity:0.5; }
+.corner-tr { top:8px; right:8px; border-top:2px solid var(--cyan); border-right:2px solid var(--cyan); opacity:0.5; }
+.corner-bl { bottom:8px; left:8px; border-bottom:2px solid var(--cyan); border-left:2px solid var(--cyan); opacity:0.5; }
+.corner-br { bottom:8px; right:8px; border-bottom:2px solid var(--cyan); border-right:2px solid var(--cyan); opacity:0.5; }
+
+/* Layout */
+.app { display:flex; height:100vh; flex-direction:column; }
+
+/* ── TOP BAR ── */
+.topbar {
+  display:flex; align-items:center; gap:0;
+  height:48px; flex-shrink:0;
+  background: linear-gradient(90deg, rgba(0,200,255,0.06) 0%, transparent 60%);
+  border-bottom:1px solid var(--border2);
+  padding: 0 16px;
+  position:relative;
+}
+.topbar::before {
+  content:'';
+  position:absolute; bottom:0; left:0; right:0;
+  height:1px;
+  background: linear-gradient(90deg, var(--cyan), transparent 70%);
+  opacity:0.4;
+}
+
+.brand {
+  display:flex; align-items:center; gap:10px;
+  padding-right:24px;
+  border-right:1px solid var(--border);
+  margin-right:16px;
+  height:100%;
+}
+.brand-logo {
+  width:28px; height:28px;
+  background: linear-gradient(135deg, var(--cyan) 0%, var(--orange) 100%);
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+  animation: pulse-logo 3s ease-in-out infinite;
+}
+@keyframes pulse-logo { 0%,100%{opacity:1} 50%{opacity:0.7} }
+
+.brand-name {
+  font-family: var(--head);
+  font-size:22px; font-weight:900;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  background: linear-gradient(90deg, var(--cyan) 0%, var(--cyan2) 50%, var(--orange) 100%);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.brand-tag {
+  font-family: var(--mono);
+  font-size:8px;
+  color: var(--tx3);
+  letter-spacing:.15em;
+  text-transform:uppercase;
+  margin-top:2px;
+}
+
+/* Nav tabs */
+.nav { display:flex; gap:0; height:100%; }
+.nav-item {
+  display:flex; align-items:center; gap:8px;
+  padding:0 20px;
+  font-family: var(--head);
+  font-size:13px; font-weight:600;
+  letter-spacing:.08em; text-transform:uppercase;
+  color: var(--tx3);
+  cursor:pointer;
+  border-bottom:2px solid transparent;
+  transition:all .15s;
+  position:relative;
+  white-space:nowrap;
+}
+.nav-item:hover { color: var(--tx2); }
+.nav-item.on {
+  color: var(--cyan);
+  border-bottom-color: var(--cyan);
+  background: rgba(0,200,255,0.04);
+}
+.nav-item .ni-icon { font-size:14px; }
+.nav-badge {
+  background: var(--orange);
+  color:#fff;
+  font-family:var(--mono);
+  font-size:9px; font-weight:700;
+  padding:1px 5px; border-radius:3px;
+  min-width:18px; text-align:center;
+}
+.nav-badge.cyan { background:var(--cyan); color:#000; }
+
+.topbar-right {
+  margin-left:auto; display:flex; gap:8px; align-items:center;
+}
+.db-status {
+  display:flex; align-items:center; gap:6px;
+  font-family:var(--mono); font-size:9px;
+  color:var(--tx3); letter-spacing:.05em;
+  padding:4px 10px;
+  border:1px solid var(--border);
+  border-radius:3px;
+}
+.db-status .dot { width:6px; height:6px; border-radius:50%; background:var(--tx3); }
+.db-status.live .dot { background:var(--green); box-shadow:0 0 6px var(--green); }
+.db-status.live { color:var(--green); border-color:rgba(0,255,136,0.2); }
+
+/* ── MAIN CONTENT ── */
+.content { flex:1; overflow:hidden; position:relative; }
+.panel { display:none; height:100%; flex-direction:column; overflow:hidden; }
+.panel.on { display:flex; }
+
+/* ── EDITOR PANEL ── */
+.editor-layout {
+  display:grid;
+  grid-template-columns: 340px 1fr 280px;
+  height:100%;
+  overflow:hidden;
+}
+
+/* Sidebar panels */
+.side-panel {
+  background: var(--panel);
+  border-right:1px solid var(--border);
+  display:flex; flex-direction:column;
+  overflow:hidden;
+}
+.side-panel.right { border-right:none; border-left:1px solid var(--border); }
+
+.sp-header {
+  padding:12px 16px 10px;
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+  background: rgba(0,200,255,0.03);
+}
+.sp-title {
+  font-family:var(--head);
+  font-size:11px; font-weight:700;
+  letter-spacing:.15em; text-transform:uppercase;
+  color:var(--tx2);
+  display:flex; align-items:center; gap:8px;
+}
+.sp-title::before {
+  content:''; display:block;
+  width:3px; height:12px;
+  background: var(--cyan);
+  border-radius:1px;
+}
+
+/* ── BUTTONS ── */
+.btn {
+  display:inline-flex; align-items:center; gap:6px;
+  padding:6px 14px; border-radius:3px;
+  font-family:var(--head); font-size:12px; font-weight:700;
+  letter-spacing:.05em; text-transform:uppercase;
+  cursor:pointer; transition:all .15s;
+  white-space:nowrap; border:none;
+}
+.btn-cyan {
+  background: rgba(0,200,255,0.12);
+  border:1px solid var(--cyan);
+  color:var(--cyan);
+}
+.btn-cyan:hover { background:rgba(0,200,255,0.22); box-shadow:var(--glow-c); }
+.btn-orange {
+  background: rgba(255,107,43,0.15);
+  border:1px solid var(--orange);
+  color:var(--orange2);
+}
+.btn-orange:hover { background:rgba(255,107,43,0.25); box-shadow:var(--glow-o); }
+.btn-ghost {
+  background: transparent;
+  border:1px solid var(--border2);
+  color:var(--tx2);
+}
+.btn-ghost:hover { border-color:var(--border3); color:var(--tx); }
+.btn-green {
+  background: rgba(0,255,136,0.12);
+  border:1px solid var(--green);
+  color:var(--green);
+}
+.btn-green:hover { background:rgba(0,255,136,0.22); box-shadow:0 0 16px rgba(0,255,136,0.2); }
+.btn-red {
+  background: rgba(255,59,92,0.10);
+  border:1px solid rgba(255,59,92,0.4);
+  color:var(--red);
+}
+.btn-red:hover { background:rgba(255,59,92,0.2); }
+.btn-sm { padding:4px 10px; font-size:11px; }
+.btn-xs { padding:2px 7px; font-size:10px; }
+.btn:disabled { opacity:.3; cursor:not-allowed; }
+
+/* ── INPUTS ── */
+input[type=text], input[type=url], select, textarea {
+  background: rgba(0,0,0,0.3);
+  border:1px solid var(--border2);
+  border-radius:3px;
+  color:var(--tx);
+  font-family:var(--mono);
+  font-size:11px;
+  padding:7px 10px;
+  outline:none;
+  transition:border-color .15s;
+  width:100%;
+}
+input:focus, select:focus, textarea:focus {
+  border-color:var(--cyan);
+  background:rgba(0,200,255,0.04);
+}
+input::placeholder, textarea::placeholder { color:var(--tx3); }
+select option { background:#0c1018; }
+textarea { resize:vertical; min-height:80px; font-size:10px; line-height:1.7; }
+
+.field { display:flex; flex-direction:column; gap:4px; margin-bottom:10px; }
+.field:last-child { margin-bottom:0; }
+.field label { font-family:var(--mono); font-size:9px; color:var(--tx3); letter-spacing:.1em; text-transform:uppercase; }
+
+/* ── SCROLLABLE AREAS ── */
+.scroll { flex:1; overflow-y:auto; padding:12px; }
+.scroll::-webkit-scrollbar { width:4px; }
+.scroll::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
+
+/* ── IMPORT ZONE ── */
+.import-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:12px; }
+.drop-zone {
+  border:1px dashed var(--border2);
+  border-radius:4px;
+  padding:18px 12px;
+  text-align:center;
+  cursor:pointer;
+  transition:all .2s;
+  background: rgba(0,0,0,0.2);
+  position:relative;
+}
+.drop-zone:hover, .drop-zone.dov {
+  border-color:var(--cyan);
+  background:rgba(0,200,255,0.05);
+  box-shadow: inset 0 0 20px rgba(0,200,255,0.05);
+}
+.drop-zone.orange:hover, .drop-zone.orange.dov {
+  border-color:var(--orange);
+  background:rgba(255,107,43,0.05);
+}
+.dz-icon { font-size:22px; margin-bottom:6px; }
+.dz-title { font-family:var(--head); font-size:13px; font-weight:700; letter-spacing:.05em; color:var(--tx2); margin-bottom:3px; }
+.dz-sub { font-family:var(--mono); font-size:9px; color:var(--tx3); line-height:1.6; }
+input[type=file] { display:none; }
+
+/* ── CHANNEL LIST ── */
+.center-panel { flex:1; display:flex; flex-direction:column; overflow:hidden; background:var(--bg2); }
+
+.ch-toolbar {
+  display:flex; align-items:center; gap:8px;
+  padding:8px 14px;
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+  background: rgba(0,0,0,0.2);
+  flex-wrap:wrap;
+}
+
+.search-wrap {
+  display:flex; align-items:center; gap:0;
+  flex:1; min-width:160px;
+  border:1px solid var(--border2);
+  border-radius:3px;
+  background:rgba(0,0,0,0.3);
+  overflow:hidden;
+}
+.search-wrap svg { margin:0 8px; color:var(--tx3); flex-shrink:0; }
+.search-wrap input {
+  flex:1; border:none; background:none; padding:6px 8px 6px 0;
+  font-size:12px; color:var(--tx);
+}
+.search-wrap input:focus { border:none; box-shadow:none; }
+.search-count { font-family:var(--mono); font-size:9px; color:var(--tx3); padding:0 10px; flex-shrink:0; }
+
+/* Selection bar */
+.sel-bar {
+  display:none; align-items:center; gap:8px;
+  padding:6px 14px;
+  background: rgba(255,107,43,0.07);
+  border-bottom:1px solid rgba(255,107,43,0.2);
+  flex-shrink:0;
+  overflow: visible;
+  position: relative;
+  z-index: 50;
+}
+.sel-bar.on { display:flex; }
+.sel-info { font-family:var(--mono); font-size:10px; color:var(--orange2); font-weight:700; white-space:nowrap; }
+
+/* Channel list */
+.ch-list { flex:1; overflow-y:auto; }
+.ch-list::-webkit-scrollbar { width:4px; }
+.ch-list::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+
+/* Group header */
+.grp-header {
+  display:flex; align-items:center; gap:10px;
+  padding:7px 14px 6px;
+  background: rgba(0,200,255,0.04);
+  border-bottom:1px solid var(--border);
+  border-top:1px solid var(--border);
+  cursor:pointer;
+  user-select:none;
+  position:sticky; top:0; z-index:10;
+}
+.grp-header:first-child { border-top:none; }
+.grp-toggle { color:var(--tx3); font-size:10px; transition:transform .15s; flex-shrink:0; }
+.grp-collapsed .grp-toggle { transform:rotate(-90deg); }
+.grp-name {
+  font-family:var(--head); font-size:13px; font-weight:700;
+  letter-spacing:.05em; text-transform:uppercase;
+  color:var(--cyan); flex:1;
+}
+.grp-count { font-family:var(--mono); font-size:10px; color:var(--tx3); }
+.grp-actions { display:flex; gap:4px; }
+.grp-body { } .grp-body.hidden { display:none; }
+.grp-collapsed .grp-body { display:none; }
+.grp-header.drag-over { background:rgba(0,200,255,0.12); border:1px dashed var(--cyan); }
+
+/* Channel row */
+.ch-row {
+  display:flex; align-items:center; gap:0;
+  border-bottom:1px solid var(--border);
+  transition:background .12s;
+  cursor:pointer;
+  position:relative;
+}
+.ch-row:hover { background:rgba(0,200,255,0.04); }
+.ch-row.selected { background:rgba(255,107,43,0.08); border-left:2px solid var(--orange); }
+.ch-row.warn-logo .ch-logo { border-color:rgba(255,216,77,0.4); }
+.ch-row.warn-epg .ch-name { color:var(--yellow) !important; }
+
+.ch-drag { padding:0 6px 0 10px; color:var(--tx3); cursor:grab; font-size:11px; flex-shrink:0; opacity:0.5; }
+.ch-drag:hover { opacity:1; }
+
+.ch-check {
+  width:32px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+}
+.ch-check input { width:13px; height:13px; accent-color:var(--orange); cursor:pointer; }
+
+.ch-logo {
+  width:36px; height:28px; flex-shrink:0; margin:4px 8px 4px 0;
+  border:1px solid var(--border);
+  border-radius:3px;
+  background:rgba(0,0,0,0.4);
+  display:flex; align-items:center; justify-content:center;
+  font-size:14px; overflow:hidden;
+}
+.ch-logo img { width:100%; height:100%; object-fit:contain; }
+
+.ch-info { flex:1; min-width:0; padding:6px 8px 6px 0; }
+.ch-name {
+  font-family:var(--head); font-size:13px; font-weight:600;
+  color:var(--tx); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.ch-meta {
+  display:flex; gap:10px; flex-wrap:wrap;
+  margin-top:2px; align-items:center;
+}
+.ch-epg { font-family:var(--mono); font-size:9px; color:var(--cyan); }
+.ch-epg.missing { color:var(--yellow); }
+.ch-urls { font-family:var(--mono); font-size:9px; color:var(--tx3); }
+.ch-logo-url { font-family:var(--mono); font-size:9px; color:var(--tx3); max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ch-logo-url.missing { color:var(--yellow); }
+
+.ch-actions { display:flex; gap:2px; padding-right:8px; flex-shrink:0; }
+.ch-btn {
+  background:none; border:none; cursor:pointer;
+  color:var(--tx3); font-size:12px;
+  padding:5px 6px; border-radius:3px;
+  transition:all .12s;
+}
+.ch-btn:hover { color:var(--tx); background:rgba(255,255,255,0.06); }
+.ch-btn.del:hover { color:var(--red); }
+.ch-btn.edit-btn:hover { color:var(--cyan); }
+
+/* Empty state */
+.empty-state {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:12px; padding:60px 20px; text-align:center; color:var(--tx3);
+  flex:1;
+}
+.empty-icon { font-size:40px; opacity:0.4; }
+.empty-title { font-family:var(--head); font-size:18px; font-weight:700; letter-spacing:.05em; color:var(--tx2); }
+.empty-sub { font-size:12px; max-width:300px; line-height:1.7; }
+
+/* ── RIGHT PANEL — CHANNEL EDITOR ── */
+.edit-panel-inner { flex:1; overflow-y:auto; padding:12px; }
+.edit-panel-inner::-webkit-scrollbar { width:3px; }
+.edit-panel-inner::-webkit-scrollbar-thumb { background:var(--border2); }
+
+.ep-none { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; height:100%; color:var(--tx3); text-align:center; padding:20px; }
+.ep-none .ep-icon { font-size:32px; opacity:0.3; }
+.ep-none p { font-size:11px; font-family:var(--mono); }
+
+.ep-header { padding:12px; border-bottom:1px solid var(--border); flex-shrink:0; }
+.ep-ch-name { font-family:var(--head); font-size:17px; font-weight:800; letter-spacing:.03em; color:var(--tx); margin-bottom:4px; word-break:break-word; }
+.ep-ch-group { font-family:var(--mono); font-size:9px; color:var(--cyan); letter-spacing:.05em; }
+
+/* Dropdown picker */
+.dd-wrap { position:relative; }
+.dd-panel {
+  position:absolute; top:calc(100% + 4px); left:0; right:0;
+  background: #0a1020;
+  border:1px solid var(--border3);
+  border-radius:4px;
+  box-shadow:0 12px 40px rgba(0,0,0,0.7);
+  z-index:9999; overflow:hidden;
+  display:none;
+}
+.dd-panel.open { display:block; }
+.dd-search { padding:8px; border-bottom:1px solid var(--border); }
+.dd-search input { padding:5px 8px; font-size:11px; }
+.dd-list { max-height:200px; overflow-y:auto; }
+.dd-list::-webkit-scrollbar { width:3px; }
+.dd-item {
+  display:flex; align-items:center; gap:8px;
+  padding:6px 10px; cursor:pointer;
+  transition:background .1s; font-size:11px;
+}
+.dd-item:hover { background:rgba(0,200,255,0.08); }
+.dd-item img { width:28px; height:22px; object-fit:contain; border-radius:2px; background:rgba(0,0,0,0.4); flex-shrink:0; }
+.dd-item .dd-key { font-family:var(--mono); font-size:9px; color:var(--cyan); }
+.dd-item .dd-val { font-size:11px; color:var(--tx); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.dd-item .dd-id { font-family:var(--mono); font-size:9px; color:var(--tx3); margin-left:auto; }
+.dd-empty { padding:14px; text-align:center; font-size:11px; color:var(--tx3); font-family:var(--mono); }
+
+/* URL list */
+.url-list { display:flex; flex-direction:column; gap:5px; }
+.url-row { display:flex; gap:5px; align-items:center; }
+.url-row input { flex:1; font-size:10px; }
+.url-rm { background:none; border:1px solid rgba(255,59,92,0.3); color:var(--red); border-radius:3px; width:24px; height:28px; cursor:pointer; font-size:13px; transition:all .1s; flex-shrink:0; }
+.url-rm:hover { background:rgba(255,59,92,0.15); }
+.add-url { background:none; border:1px dashed var(--border2); color:var(--tx3); border-radius:3px; font-size:10px; padding:4px; cursor:pointer; transition:all .15s; width:100%; text-align:center; margin-top:4px; }
+.add-url:hover { border-color:var(--cyan); color:var(--cyan); }
+
+/* Logo preview */
+.logo-preview-box {
+  width:60px; height:46px; border:1px solid var(--border2); border-radius:3px;
+  background:rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:center;
+  font-size:22px; overflow:hidden; flex-shrink:0;
+}
+.logo-preview-box img { width:100%; height:100%; object-fit:contain; }
+
+/* ── DATABASE PANEL ── */
+.db-panel-layout { display:grid; grid-template-columns:1fr 1fr; gap:0; height:100%; overflow:hidden; }
+.db-col { display:flex; flex-direction:column; border-right:1px solid var(--border); overflow:hidden; }
+.db-col:last-child { border-right:none; }
+.db-col-header { padding:14px 18px 12px; border-bottom:1px solid var(--border); flex-shrink:0; background:rgba(0,200,255,0.02); }
+.db-col-title { font-family:var(--head); font-size:16px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--cyan); margin-bottom:4px; display:flex; align-items:center; gap:10px; }
+.db-col-title .count { font-size:12px; font-family:var(--mono); background:rgba(0,200,255,0.12); color:var(--cyan); padding:2px 8px; border-radius:2px; }
+.db-col-sub { font-size:11px; color:var(--tx2); }
+
+/* Drop zones for DB */
+.db-drop { margin:12px; }
+.db-table { flex:1; overflow:auto; }
+.db-table::-webkit-scrollbar { width:4px; }
+.db-table::-webkit-scrollbar-thumb { background:var(--border2); }
+.db-tbl { width:100%; border-collapse:collapse; font-size:11px; }
+.db-tbl th { font-family:var(--mono); font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:var(--tx3); padding:7px 12px; text-align:left; border-bottom:1px solid var(--border); background:var(--panel); position:sticky; top:0; z-index:5; }
+.db-tbl td { padding:6px 12px; border-bottom:1px solid var(--border); color:var(--tx2); font-family:var(--mono); vertical-align:middle; }
+.db-tbl tr:hover td { background:rgba(0,200,255,0.03); }
+.td-id { color:var(--cyan); max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.td-name { color:var(--tx); font-weight:500; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.td-logo-thumb { width:32px; height:22px; object-fit:contain; border-radius:2px; background:rgba(0,0,0,0.4); }
+.td-url { max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--tx3); font-size:9px; }
+
+/* Badge */
+.badge { display:inline-flex; align-items:center; padding:1px 6px; border-radius:2px; font-family:var(--mono); font-size:8px; font-weight:700; text-transform:uppercase; }
+.badge-png { background:rgba(155,89,182,.15); color:#c39bd3; border:1px solid rgba(155,89,182,.2); }
+.badge-svg { background:rgba(52,152,219,.15); color:#74b9ff; border:1px solid rgba(52,152,219,.2); }
+.badge-jpg { background:rgba(230,126,34,.15); color:#f39c12; border:1px solid rgba(230,126,34,.2); }
+.badge-xml { background:rgba(0,200,255,.12); color:var(--cyan); border:1px solid rgba(0,200,255,.2); }
+
+/* ── OUTPUT PANEL ── */
+.output-layout { display:grid; grid-template-columns:1fr 340px; height:100%; overflow:hidden; }
+.m3u-preview { flex:1; display:flex; flex-direction:column; border-right:1px solid var(--border); overflow:hidden; }
+.m3u-code {
+  flex:1; overflow:auto; padding:16px 18px;
+  font-family:var(--mono); font-size:11px; line-height:1.9;
+  white-space:pre-wrap; word-break:break-all;
+  color:#6a8faa;
+}
+.m3u-code::-webkit-scrollbar { width:5px; }
+.m3u-code::-webkit-scrollbar-thumb { background:var(--border2); }
+.m3u-ext { color:rgba(255,255,255,.18); }
+.m3u-attr { color:#5a9fd4; }
+.m3u-val { color:#c39bd3; }
+.m3u-name { color:var(--tx); font-weight:700; }
+.m3u-url { color:var(--green); }
+
+.output-side { display:flex; flex-direction:column; background:var(--panel); overflow:hidden; }
+.output-stats { padding:16px; border-bottom:1px solid var(--border); }
+.stat-row { display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid var(--border); }
+.stat-row:last-child { border-bottom:none; }
+.stat-label { font-family:var(--mono); font-size:10px; color:var(--tx3); }
+.stat-val { font-family:var(--head); font-size:18px; font-weight:800; color:var(--cyan); }
+.stat-val.orange { color:var(--orange2); }
+.stat-val.green { color:var(--green); }
+.stat-val.yellow { color:var(--yellow); }
+
+/* ── TOAST ── */
+.toast-area { position:fixed; bottom:18px; right:18px; z-index:99999; display:flex; flex-direction:column; gap:6px; }
+.toast {
+  display:flex; align-items:center; gap:10px;
+  padding:10px 16px; border-radius:4px;
+  background: rgba(10,16,32,0.97);
+  border:1px solid var(--border);
+  font-family:var(--head); font-size:13px; font-weight:600; letter-spacing:.04em;
+  box-shadow:0 8px 32px rgba(0,0,0,0.6);
+  animation: toast-in .2s ease;
+  min-width:240px;
+  backdrop-filter:blur(10px);
+}
+@keyframes toast-in { from { transform:translateX(20px); opacity:0; } }
+.toast.suc { border-color:rgba(0,255,136,0.3); color:var(--green); }
+.toast.err { border-color:rgba(255,59,92,0.3); color:var(--red); }
+.toast.inf { border-color:rgba(0,200,255,0.3); color:var(--cyan); }
+.toast.warn { border-color:rgba(255,216,77,0.3); color:var(--yellow); }
+.toast-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+.toast.suc .toast-dot { background:var(--green); }
+.toast.err .toast-dot { background:var(--red); }
+.toast.inf .toast-dot { background:var(--cyan); }
+.toast.warn .toast-dot { background:var(--yellow); }
+
+/* ── LOG ── */
+.log-area { border-top:1px solid var(--border); flex-shrink:0; max-height:90px; overflow-y:auto; padding:6px 12px; background:rgba(0,0,0,0.3); }
+.log-area::-webkit-scrollbar { width:3px; }
+.log-line { font-family:var(--mono); font-size:9px; color:var(--tx3); padding:1px 0; display:flex; gap:8px; }
+.log-line .lt { flex-shrink:0; }
+.log-line.suc .lm { color:var(--green); }
+.log-line.warn .lm { color:var(--yellow); }
+.log-line.err .lm { color:var(--red); }
+.log-line.inf .lm { color:var(--cyan); }
+
+/* ── MISC ── */
+.divider { height:1px; background:var(--border); margin:10px 0; }
+.section-title { font-family:var(--mono); font-size:9px; letter-spacing:.12em; text-transform:uppercase; color:var(--tx3); margin-bottom:8px; display:flex; align-items:center; gap:8px; }
+.section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+.row { display:flex; gap:6px; align-items:center; }
+.row .field { flex:1; margin-bottom:0; }
+.inline-row { display:flex; gap:6px; }
+.inline-row .field { flex:1; margin-bottom:0; }
+.flex-row { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+
+.chip {
+  display:inline-flex; align-items:center; gap:4px;
+  padding:2px 8px; border-radius:2px;
+  font-family:var(--mono); font-size:9px;
+  background:rgba(0,200,255,.08); color:var(--cyan);
+  border:1px solid rgba(0,200,255,.15);
+  cursor:default;
+}
+.chip.orange { background:rgba(255,107,43,.08); color:var(--orange2); border-color:rgba(255,107,43,.2); }
+.chip.green { background:rgba(0,255,136,.08); color:var(--green); border-color:rgba(0,255,136,.2); }
+.chip.yellow { background:rgba(255,216,77,.08); color:var(--yellow); border-color:rgba(255,216,77,.2); }
+
+.tab-bar { display:flex; gap:0; border-bottom:1px solid var(--border); flex-shrink:0; }
+.tab-item { padding:8px 16px; font-family:var(--mono); font-size:10px; letter-spacing:.05em; color:var(--tx3); cursor:pointer; border-bottom:2px solid transparent; transition:all .12s; }
+.tab-item:hover { color:var(--tx2); }
+.tab-item.on { color:var(--cyan); border-bottom-color:var(--cyan); }
+
+.anim-row { animation: row-in .15s ease; }
+@keyframes row-in { from { opacity:0; transform:translateY(-4px); } }
+
+@media (max-width:1200px) { .editor-layout { grid-template-columns:280px 1fr 260px; } }
+@media (max-width:900px) { 
+  .editor-layout { grid-template-columns:1fr; }
+  .side-panel.right { display:none; }
+}
+</style>
+</head>
+<body>
+
+<div class="corner-tl"></div><div class="corner-tr"></div>
+<div class="corner-bl"></div><div class="corner-br"></div>
+
+<div class="app">
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-logo"></div>
+    <div>
+      <div class="brand-name">IPTV Forge</div>
+      <div class="brand-tag">Channel Matrix v2</div>
+    </div>
+  </div>
+  <nav class="nav">
+    <div class="nav-item on" onclick="navTo('editor',this)">
+      <span class="ni-icon">⬡</span> Editor
+      <span class="nav-badge" id="badge-ch">0</span>
+    </div>
+    <div class="nav-item" onclick="navTo('database',this)">
+      <span class="ni-icon">◈</span> Database
+      <span class="nav-badge cyan" id="badge-db">0</span>
+    </div>
+    <div class="nav-item" onclick="navTo('output',this)">
+      <span class="ni-icon">⬇</span> Exportar
+    </div>
+  </nav>
+  <div class="topbar-right">
+    <div class="db-status" id="db-status-pill">
+      <span class="dot"></span>
+      <span id="db-status-txt">sem database</span>
+    </div>
+    <button class="btn btn-orange btn-sm" onclick="navTo('output',null);buildOutput()">⬇ Gerar M3U</button>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="content">
+
+<!-- ══════════ EDITOR PANEL ══════════ -->
+<div class="panel on" id="panel-editor">
+<div class="editor-layout">
+
+  <!-- LEFT: Import + Groups -->
+  <div class="side-panel">
+    <div class="sp-header">
+      <div class="sp-title">Importar / Criar</div>
+    </div>
+
+    <div style="padding:10px 12px; border-bottom:1px solid var(--border); flex-shrink:0;">
+      <!-- Import dropzones -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:8px;">
+        <div class="drop-zone" onclick="document.getElementById('in-m3u').click()"
+          ondragover="dzo(event,this)" ondragleave="dzl(this)" ondrop="dzd(event,'m3u',this)">
+          <div class="dz-icon">📋</div>
+          <div class="dz-title">M3U</div>
+          <div class="dz-sub">.m3u · .m3u8<br>ou cole abaixo</div>
+        </div>
+        <div class="drop-zone orange" onclick="document.getElementById('in-json-load').click()"
+          ondragover="dzo(event,this)" ondragleave="dzl(this)" ondrop="dzd(event,'json-load',this)">
+          <div class="dz-icon">📦</div>
+          <div class="dz-title">Backup</div>
+          <div class="dz-sub">.json<br>projeto salvo</div>
+        </div>
+      </div>
+      <input type="file" id="in-m3u" accept=".m3u,.m3u8,.txt" onchange="loadM3UFile(this)">
+      <input type="file" id="in-json-load" accept=".json" onchange="loadBackupFile(this)">
+
+      <!-- Paste area -->
+      <textarea id="paste-area" placeholder="Cole M3U aqui e pressione ⚡..." rows="3" style="margin-bottom:6px;font-size:10px;"></textarea>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-cyan btn-sm" style="flex:1" onclick="parsePastedM3U()">⚡ Processar</button>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('paste-area').value=''">✕</button>
+      </div>
+    </div>
+
+    <!-- Group manager -->
+    <div class="sp-header" style="margin-top:0;">
+      <div class="sp-title">Grupos</div>
+    </div>
+    <div style="padding:8px 12px; border-bottom:1px solid var(--border); flex-shrink:0;">
+      <div class="row">
+        <input type="text" id="new-grp" placeholder="Nome do grupo..." style="flex:1;font-size:11px" onkeydown="if(event.key==='Enter')addGroup()">
+        <button class="btn btn-cyan btn-sm" onclick="addGroup()">+ Criar</button>
+      </div>
+    </div>
+    <div class="scroll" id="grp-list">
+      <div style="color:var(--tx3); font-family:var(--mono); font-size:10px; text-align:center; padding:20px;">Nenhum grupo</div>
+    </div>
+    <div style="padding:10px 12px; border-top:1px solid var(--border); display:flex; gap:6px; flex-shrink:0;">
+      <button class="btn btn-ghost btn-sm" style="flex:1" onclick="exportBackup()">💾 Backup</button>
+      <button class="btn btn-red btn-sm" onclick="clearAll()">🗑 Limpar</button>
+    </div>
+  </div>
+
+  <!-- CENTER: Channel List -->
+  <div class="center-panel">
+    <div class="ch-toolbar">
+      <div class="search-wrap">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="search-input" placeholder="Buscar canal..." oninput="filterChannels()">
+        <span class="search-count" id="search-count">—</span>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="toggleSelMode()" id="sel-toggle-btn">☑ Selecionar</button>
+      <button class="btn btn-cyan btn-sm" onclick="openAddChannel()">+ Canal</button>
+      <div class="dd-wrap" style="position:relative;">
+        <button class="btn btn-ghost btn-sm" onclick="toggleDD('dd-autofill')" title="Auto-preencher logo e EPG por nome">✦ Auto-fill ▾</button>
+        <div class="dd-panel" id="dd-autofill" style="width:240px;right:0;left:auto;">
+          <div class="dd-item" onclick="autoFillAll(false);closeAllDD()">
+            <span class="dd-val">Preencher vazios</span>
+            <span class="dd-id">só sem logo/epg</span>
+          </div>
+          <div class="dd-item" onclick="autoFillAll(true);closeAllDD()">
+            <span class="dd-val">Preencher tudo</span>
+            <span class="dd-id" style="color:var(--yellow)">sobrescreve existentes</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Selection bar / Bulk edit -->
+    <div class="sel-bar" id="sel-bar">
+      <span class="sel-info" id="sel-count">0 selecionados</span>
+      <button class="btn btn-ghost btn-sm" id="btn-bulk-logo" onclick="openBulkDD('logo',this)">🖼 Logo</button>
+      <button class="btn btn-ghost btn-sm" id="btn-bulk-epg" onclick="openBulkDD('epg',this)">📡 EPG-id</button>
+      <button class="btn btn-ghost btn-sm" id="btn-bulk-grp" onclick="openBulkDD('grp',this)">📁 Grupo</button>
+      <button class="btn btn-ghost btn-sm" onclick="bulkClearLogo()">✕Logos</button>
+      <button class="btn btn-ghost btn-sm" onclick="bulkClearEpg()">✕EPG-ids</button>
+      <button class="btn btn-cyan btn-sm" onclick="autoFillSelected()">✦ Auto-fill</button>
+      <button class="btn btn-red btn-sm" onclick="deleteSelected()">🗑</button>
+      <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="clearSel()">✕ Sair</button>
+    </div>
+
+    <!-- Floating bulk panel (position:fixed, escapes all overflow) -->
+    <div id="bulk-float" style="display:none;position:fixed;z-index:9999;background:#0a1020;border:1px solid var(--border3);border-radius:4px;box-shadow:0 12px 40px rgba(0,0,0,0.8);overflow:hidden;width:300px;">
+      <div style="padding:8px;border-bottom:1px solid var(--border);">
+        <input type="text" id="bulk-float-q" placeholder="Buscar..." style="width:100%;font-size:11px;" oninput="filterBulkFloat(this.value)">
+      </div>
+      <div id="bulk-float-list" style="max-height:220px;overflow-y:auto;"></div>
+    </div>
+
+    <!-- Channel list -->
+    <div class="ch-list" id="ch-list">
+      <div class="empty-state">
+        <div class="empty-icon">📡</div>
+        <div class="empty-title">Nenhum canal</div>
+        <div class="empty-sub">Importe um arquivo .m3u, cole uma lista ou adicione canais manualmente</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Channel Editor -->
+  <div class="side-panel right" id="right-panel">
+    <div class="sp-header">
+      <div class="sp-title">Canal</div>
+    </div>
+    <div id="edit-panel-content" style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
+      <div class="ep-none">
+        <div class="ep-icon">✎</div>
+        <p>Clique em um canal<br>para editar</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ══════════ DATABASE PANEL ══════════ -->
+<div class="panel" id="panel-database">
+<div class="db-panel-layout">
+
+  <!-- LOGOS col -->
+  <div class="db-col">
+    <div class="db-col-header">
+      <div class="db-col-title">
+        🖼 Logos
+        <span class="count" id="logo-count-badge">0</span>
+      </div>
+      <div class="db-col-sub">Arraste imagens ou carregue logos.json / iptv-database.json</div>
+    </div>
+    <div style="padding:10px 12px; border-bottom:1px solid var(--border); display:flex; gap:6px; flex-wrap:wrap; flex-shrink:0;">
+      <div class="drop-zone" style="flex:1;padding:10px;min-width:120px;"
+        onclick="document.getElementById('in-logos-img').click()"
+        ondragover="dzo(event,this)" ondragleave="dzl(this)" ondrop="dzd(event,'logos-img',this)">
+        <div class="dz-title" style="font-size:11px;">📁 Imagens</div>
+        <div class="dz-sub">PNG·SVG·JPG·WebP</div>
+      </div>
+      <div class="drop-zone orange" style="flex:1;padding:10px;min-width:120px;"
+        onclick="document.getElementById('in-logos-json').click()"
+        ondragover="dzo(event,this)" ondragleave="dzl(this)" ondrop="dzd(event,'logos-json',this)">
+        <div class="dz-title" style="font-size:11px;">📄 logos.json</div>
+        <div class="dz-sub">ou iptv-database.json</div>
+      </div>
+    </div>
+    <input type="file" id="in-logos-img" multiple accept="image/*,.svg" onchange="loadLogoImages(this.files)">
+    <input type="file" id="in-logos-json" accept=".json" onchange="loadLogosJSON(this)">
+
+    <!-- GitHub URL builder -->
+    <div style="padding:10px 12px; border-bottom:1px solid var(--border); flex-shrink:0;">
+      <div class="section-title">Config GitHub (gera URLs automáticas)</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+        <div class="field" style="margin:0"><label>Usuário</label><input type="text" id="gh-user" value="seunome" oninput="refreshLogoURLs()"></div>
+        <div class="field" style="margin:0"><label>Repo</label><input type="text" id="gh-repo" value="repositorio" oninput="refreshLogoURLs()"></div>
+        <div class="field" style="margin:0"><label>Pasta</label><input type="text" id="gh-folder" value="pasta" oninput="refreshLogoURLs()"></div>
+        <div class="field" style="margin:0"><label>Branch</label><input type="text" id="gh-branch" value="main" oninput="refreshLogoURLs()"></div>
+      </div>
+    </div>
+
+    <div class="db-table">
+      <table class="db-tbl">
+        <thead><tr><th>Prévia</th><th>ID/Slug</th><th>Tipo</th><th>URL</th></tr></thead>
+        <tbody id="logos-tbody">
+          <tr><td colspan="4" style="text-align:center;padding:20px;color:var(--tx3);font-family:var(--mono);font-size:10px;">Nenhuma logo carregada</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="padding:8px 12px; border-top:1px solid var(--border); display:flex; gap:6px; flex-shrink:0;">
+      <button class="btn btn-cyan btn-sm" onclick="exportLogosJSON()">⬇ logos.json</button>
+      <button class="btn btn-ghost btn-sm" onclick="clearLogos()">🗑 Limpar</button>
+    </div>
+  </div>
+
+  <!-- EPG col -->
+  <div class="db-col">
+    <div class="db-col-header">
+      <div class="db-col-title" style="color:var(--orange2)">
+        📡 EPG IDs
+        <span class="count" id="epg-count-badge" style="background:rgba(255,107,43,.12);color:var(--orange2);">0</span>
+      </div>
+      <div class="db-col-sub">Arraste XMLs da internet ou carregue epg.json</div>
+    </div>
+    <div style="padding:10px 12px; border-bottom:1px solid var(--border); display:flex; gap:6px; flex-wrap:wrap; flex-shrink:0;">
+      <div class="drop-zone orange" style="flex:1;padding:10px;min-width:120px;"
+        onclick="document.getElementById('in-epg-xml').click()"
+        ondragover="dzo(event,this)" ondragleave="dzl(this)" ondrop="dzd(event,'epg-xml',this)">
+        <div class="dz-title" style="font-size:11px;">📄 XML EPG</div>
+        <div class="dz-sub">brasil.xml</div>
+      </div>
+      <div class="drop-zone" style="flex:1;padding:10px;min-width:120px;"
+        onclick="document.getElementById('in-epg-json').click()"
+        ondragover="dzo(event,this)" ondragleave="dzl(this)" ondrop="dzd(event,'epg-json',this)">
+        <div class="dz-title" style="font-size:11px;">📄 epg.json</div>
+        <div class="dz-sub">ou iptv-database.json</div>
+      </div>
+    </div>
+    <input type="file" id="in-epg-xml" multiple accept=".xml,.txt,text/xml,text/plain" onchange="loadEPGXML(this.files)">
+    <input type="file" id="in-epg-json" accept=".json" onchange="loadEPGJSON(this)">
+
+    <div style="padding:8px 12px; border-bottom:1px solid var(--border); flex-shrink:0;">
+      <div class="section-title">Buscar na lista</div>
+      <div class="search-wrap" style="border-radius:3px;">
+        <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" placeholder="Filtrar ID ou nome..." id="epg-filter" oninput="renderEPGTable()" style="font-size:11px;padding:5px;">
+      </div>
+    </div>
+
+    <div class="db-table">
+      <table class="db-tbl">
+        <thead><tr><th>Slug</th><th>Channel ID (EPG)</th><th>Fonte</th></tr></thead>
+        <tbody id="epg-tbody">
+          <tr><td colspan="3" style="text-align:center;padding:20px;color:var(--tx3);font-family:var(--mono);font-size:10px;">Nenhum EPG carregado</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="padding:8px 12px; border-top:1px solid var(--border); display:flex; gap:6px; flex-shrink:0;">
+      <button class="btn btn-orange btn-sm" onclick="exportEPGJSON()">⬇ epg.json</button>
+      <button class="btn btn-green btn-sm" onclick="exportAllDB()">⬇ iptv-database.json</button>
+      <button class="btn btn-ghost btn-sm" onclick="clearEPG()">🗑 Limpar</button>
+    </div>
+    <div class="log-area" id="epg-log"></div>
+  </div>
+
+</div>
+</div>
+
+<!-- ══════════ OUTPUT PANEL ══════════ -->
+<div class="panel" id="panel-output">
+<div class="output-layout">
+  <div class="m3u-preview">
+    <div class="ch-toolbar">
+      <span style="font-family:var(--head);font-size:13px;font-weight:700;letter-spacing:.05em;color:var(--tx2);text-transform:uppercase;">Preview M3U</span>
+      <button class="btn btn-ghost btn-sm" onclick="buildOutput()">↺ Regenerar</button>
+      <button class="btn btn-ghost btn-sm" onclick="copyM3U()">📋 Copiar</button>
+      <button class="btn btn-green btn-sm" onclick="downloadM3U()">⬇ Baixar .m3u</button>
+    </div>
+    <div class="m3u-code" id="m3u-code"><span style="color:var(--tx3);font-family:var(--mono);font-size:10px;">// Clique em "Gerar M3U" para visualizar</span></div>
+  </div>
+  <div class="output-side">
+    <div class="sp-header">
+      <div class="sp-title">Estatísticas</div>
+    </div>
+    <div class="output-stats">
+      <div class="stat-row"><span class="stat-label">Total canais</span><span class="stat-val" id="stat-total">0</span></div>
+      <div class="stat-row"><span class="stat-label">Grupos</span><span class="stat-val orange" id="stat-grps">0</span></div>
+      <div class="stat-row"><span class="stat-label">Com logo</span><span class="stat-val green" id="stat-logos">0</span></div>
+      <div class="stat-row"><span class="stat-label">Com EPG-id</span><span class="stat-val green" id="stat-epgs">0</span></div>
+      <div class="stat-row"><span class="stat-label">Sem logo</span><span class="stat-val yellow" id="stat-nologos">0</span></div>
+      <div class="stat-row"><span class="stat-label">Sem EPG-id</span><span class="stat-val yellow" id="stat-noepgs">0</span></div>
+      <div class="stat-row"><span class="stat-label">Total URLs</span><span class="stat-val" id="stat-urls">0</span></div>
+    </div>
+    <div class="scroll">
+      <div class="section-title">EPG URLs no header</div>
+      <div class="field" style="margin-bottom:8px;">
+        <label>URL EPG (header)</label>
+        <input type="url" id="out-epg-url" placeholder="https://epg.exemplo.com/guide.xml">
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="addEPGUrl()" style="margin-bottom:10px;width:100%">+ Adicionar URL EPG</button>
+      <div id="epg-urls-list" style="display:flex;flex-direction:column;gap:5px;"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+</div><!-- /content -->
+</div><!-- /app -->
+
+<!-- Toast area -->
+<div class="toast-area" id="toast-area"></div>
+
+
+<script>
+'use strict';
+
+// ══════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════
+let channels = [];   // {name, id, logo, group, urls:[]}
+let groups   = [];   // string[]
+let LOGOS    = {};   // slug → url
+let EPG      = {};   // slug → channel-id
+let epgUrls  = [];   // string[] for M3U header
+let selMode  = false;
+let selSet   = new Set();
+let activeIdx = null;
+let _bulkType = '';
+
+// ══════════════════════════════════════════════
+// CORE UTILS
+// ══════════════════════════════════════════════
+const qs = id => document.getElementById(id);
+
+function esc(s){
+  return String(s==null?'':s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function slug(s){
+  return String(s==null?'':s).toLowerCase()
+    .replace(/[àáâãä]/g,'a').replace(/[èéêë]/g,'e')
+    .replace(/[ìíîï]/g,'i').replace(/[òóôõö]/g,'o')
+    .replace(/[ùúûü]/g,'u').replace(/[ç]/g,'c').replace(/[ñ]/g,'n')
+    .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+}
+// Standardize channel/group names to UPPERCASE
+function stdName(s){
+  return String(s==null?'':s).trim().toUpperCase();
+}
+function stdGroup(s){
+  return String(s==null?'':s).trim().toUpperCase();
+}
+
+function toast(msg, type='inf', dur=3200){
+  const a = qs('toast-area');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<div class="toast-dot"></div><span>${msg}</span>`;
+  a.appendChild(el);
+  setTimeout(()=>{ el.style.opacity='0'; el.style.transition='.3s'; setTimeout(()=>el.remove(),300); }, dur);
+}
+
+function log(msg, type='inf'){
+  const c = qs('epg-log'); if(!c) return;
+  const ts = new Date().toLocaleTimeString('pt-BR',{hour12:false});
+  const el = document.createElement('div');
+  el.className = `log-line ${type}`;
+  el.innerHTML = `<span class="lt">${ts}</span><span class="lm">${esc(msg)}</span>`;
+  c.appendChild(el); c.scrollTop = c.scrollHeight;
+}
+
+function dlFile(content, name, mime='application/octet-stream'){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([content],{type:mime}));
+  a.download = name; a.click(); URL.revokeObjectURL(a.href);
+}
+
+// ══════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════
+function navTo(name, el){
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('on'));
+  const panel = qs('panel-' + name);
+  if(panel) panel.classList.add('on'); else { console.error('panel not found: panel-'+name); return; }
+  if(el) el.classList.add('on');
+}
+
+// ══════════════════════════════════════════════
+// PERSIST / RESTORE
+// ══════════════════════════════════════════════
+function persist(){
+  try{
+    localStorage.setItem('iptvf-ch',  JSON.stringify(channels));
+    localStorage.setItem('iptvf-grp', JSON.stringify(groups));
+    localStorage.setItem('iptvf-lg',  JSON.stringify(LOGOS));
+    localStorage.setItem('iptvf-epg', JSON.stringify(EPG));
+    localStorage.setItem('iptvf-eu',  JSON.stringify(epgUrls));
+  }catch(e){}
+}
+function restore(){
+  try{
+    const g = k => { try{ const v=localStorage.getItem(k); return v?JSON.parse(v):null; }catch(e){ return null; }};
+    channels = g('iptvf-ch')  || [];
+    groups   = g('iptvf-grp') || [];
+    LOGOS    = g('iptvf-lg')  || {};
+    EPG      = g('iptvf-epg') || {};
+    epgUrls  = g('iptvf-eu')  || [];
+  }catch(e){}
+}
+
+// ══════════════════════════════════════════════
+// DRAG-DROP ZONES
+// ══════════════════════════════════════════════
+function dzo(e,el){ e.preventDefault(); el.classList.add('dov'); }
+function dzl(el){ el.classList.remove('dov'); }
+function dzd(e,type,el){
+  e.preventDefault(); dzl(el);
+  const files = e.dataTransfer.files;
+  if(type==='m3u')        handleM3UDrop(files);
+  else if(type==='json-load')  handleBackupDrop(files);
+  else if(type==='logos-img')  loadLogoImages(files);
+  else if(type==='logos-json') handleLogosJSONDrop(files);
+  else if(type==='epg-xml')    loadEPGXML(files);
+  else if(type==='epg-json')   handleEPGJSONDrop(files);
+}
+
+// ══════════════════════════════════════════════
+// FUZZY MATCH ENGINE
+// ══════════════════════════════════════════════
+
+// Strip all common IPTV noise tokens from a slug
+const NOISE = /\b(hd|fhd|4k|uhd|sd|plus|open|ao|vivo|live|br|brasil|brazil|hd2|h265|hevc|full|tv|canal|rede|net|s[0-9]+|e[0-9]+)\b/g;
+
+function normalize(s){
+  // Work on the slug, remove noise words, collapse dashes
+  return slug(s).replace(NOISE,'').replace(/-+/g,'-').replace(/^-+|-+$/g,'');
+}
+
+function lev(a,b){
+  const m=a.length,n=b.length;
+  if(!m) return n; if(!n) return m;
+  const d=[];
+  for(let i=0;i<=m;i++){ d[i]=[i]; }
+  for(let j=1;j<=n;j++) d[0][j]=j;
+  for(let i=1;i<=m;i++) for(let j=1;j<=n;j++)
+    d[i][j]=a[i-1]===b[j-1]?d[i-1][j-1]:1+Math.min(d[i-1][j],d[i][j-1],d[i-1][j-1]);
+  return d[m][n];
+}
+function levSim(a,b){ const L=Math.max(a.length,b.length); return L?(L-lev(a,b))/L:1; }
+function tokens(s){ return s.split('-').filter(t=>t.length>1); }
+function tokenSortSim(a,b){ return levSim(tokens(a).sort().join('-'), tokens(b).sort().join('-')); }
+function tokenSetSim(a,b){
+  const as=new Set(tokens(a)), bs=new Set(tokens(b));
+  if(!as.size||!bs.size) return 0;
+  let inter=0; as.forEach(t=>{ if(bs.has(t)) inter++; });
+  return inter / Math.max(as.size, bs.size);
+}
+function tokenSubset(a,b){
+  // All tokens of shorter contained in longer = strong match
+  const at=tokens(a), bt=tokens(b);
+  const [short,long]=at.length<=bt.length?[at,bt]:[bt,at];
+  if(!short.length||!long.length) return 0;
+  const longSet=new Set(long);
+  const matched=short.filter(t=>longSet.has(t)).length;
+  return matched/short.length;
+}
+
+function sim(rawA, rawB){
+  // Compare on both original slugs AND normalized (noise-stripped) versions
+  const a=slug(rawA), b=slug(rawB);
+  if(!a||!b) return 0;
+  if(a===b) return 1;
+  // Direct substring = strong
+  if(a.length>3&&b.length>3){
+    if(a.includes(b)) return 0.94;
+    if(b.includes(a)) return 0.94;
+  }
+  const na=normalize(a), nb=normalize(b);
+  if(na&&nb){
+    if(na===nb) return 0.98;
+    if(na.length>2&&nb.length>2){
+      if(na.includes(nb)||nb.includes(na)) return 0.93;
+    }
+  }
+  // Multi-strategy on raw slugs
+  const s1 = levSim(a, b);
+  const s2 = tokenSortSim(a, b);
+  const s3 = tokenSetSim(a, b);
+  const s4 = tokenSubset(a, b);
+  // Multi-strategy on normalized
+  const s5 = na&&nb ? levSim(na, nb) : 0;
+  const s6 = na&&nb ? tokenSortSim(na, nb) : 0;
+  const s7 = na&&nb ? tokenSetSim(na, nb) : 0;
+  const s8 = na&&nb ? tokenSubset(na, nb) : 0;
+  // Prefix bonus: first token matches = very likely same channel
+  const ta=tokens(a), tb=tokens(b);
+  const pb = (ta[0]&&tb[0]&&ta[0]===tb[0]&&ta[0].length>2) ? 0.12 : 0;
+  const base = Math.max(s1,s2,s3,s4,s5,s6,s7,s8);
+  return Math.min(1, base + pb);
+}
+
+function bestLogo(name){
+  if(!Object.keys(LOGOS).length) return null;
+  let bk=null, bs=0;
+  for(const k of Object.keys(LOGOS)){
+    const s=sim(name,k);
+    if(s>bs){ bs=s; bk=k; }
+  }
+  return bs>=0.38 ? {key:bk, url:LOGOS[bk], score:bs} : null;
+}
+function bestEpg(name){
+  if(!Object.keys(EPG).length) return null;
+  let bk=null, bs=0;
+  for(const k of Object.keys(EPG)){
+    const s=sim(name,k);
+    if(s>bs){ bs=s; bk=k; }
+  }
+  return bs>=0.38 ? {key:bk, id:EPG[bk], score:bs} : null;
+}
+
+// ══════════════════════════════════════════════
+// AUTO-FILL
+// ══════════════════════════════════════════════
+function autoFillAll(force){
+  if(!Object.keys(LOGOS).length && !Object.keys(EPG).length){
+    toast('Carregue logos e/ou EPG na aba Database','warn'); return;
+  }
+  let fL=0, fE=0;
+  channels.forEach((ch,i)=>{
+    if((!ch.logo||force) && Object.keys(LOGOS).length){
+      const m=bestLogo(ch.name); if(m){ channels[i].logo=m.url; fL++; }
+    }
+    if((!ch.id||force) && Object.keys(EPG).length){
+      const m=bestEpg(ch.name); if(m){ channels[i].id=m.id; fE++; }
+    }
+  });
+  renderAll(); persist();
+  toast(`Auto-fill: ${fL} logos · ${fE} EPG-ids`, (fL+fE)>0?'suc':'warn');
+}
+function autoFillSelected(){
+  if(!selSet.size){ toast('Selecione canais primeiro','warn'); return; }
+  if(!Object.keys(LOGOS).length && !Object.keys(EPG).length){ toast('Carregue database','warn'); return; }
+  let fL=0, fE=0;
+  selSet.forEach(i=>{
+    if(!channels[i].logo && Object.keys(LOGOS).length){ const m=bestLogo(channels[i].name); if(m){ channels[i].logo=m.url; fL++; } }
+    if(!channels[i].id   && Object.keys(EPG).length){  const m=bestEpg(channels[i].name);   if(m){ channels[i].id=m.id;   fE++; } }
+  });
+  renderAll(); persist();
+  toast(`Auto-fill sel.: ${fL} logos · ${fE} EPGs`, (fL+fE)>0?'suc':'warn');
+}
+
+// ══════════════════════════════════════════════
+// GROUPS
+// ══════════════════════════════════════════════
+function addGroup(){
+  const inp=qs('new-grp'), v=stdGroup(inp.value.trim());
+  if(!v){ inp.focus(); inp.style.borderColor='var(--orange)'; setTimeout(()=>inp.style.borderColor='',1200); return; }
+  inp.value='';
+  if(groups.includes(v)){ toast(`"${v}" já existe`,'warn'); return; }
+  groups.push(v);
+  renderAll(); persist(); toast(`Grupo "${v}" criado`,'suc');
+}
+function deleteGroup(g){
+  if(!confirm(`Remover grupo "${g}" e seus canais?`)) return;
+  channels=channels.filter(c=>c.group!==g);
+  groups=groups.filter(x=>x!==g);
+  renderAll(); persist(); toast(`"${g}" removido`,'inf');
+}
+function renameGroup(g){
+  const raw=prompt('Novo nome:',g); if(!raw) return;
+  const nv=stdGroup(raw.trim()); if(!nv||nv===g) return;
+  channels.forEach(c=>{ if(c.group===g) c.group=nv; });
+  const i=groups.indexOf(g); if(i>=0) groups[i]=nv;
+  renderAll(); persist();
+}
+
+let dgSrc=-1;
+function dragGrpStart(e,i){ dgSrc=i; e.dataTransfer.effectAllowed='move'; }
+function dragGrpOver(e){ e.preventDefault(); }
+function dragGrpDrop(e,i){
+  e.preventDefault();
+  if(dgSrc<0||dgSrc===i) return;
+  const [m]=groups.splice(dgSrc,1); groups.splice(i,0,m);
+  dgSrc=-1; renderAll(); persist();
+}
+
+function renderGroupList(){
+  const el=qs('grp-list');
+  if(!groups.length){
+    el.innerHTML='<div style="color:var(--tx3);font-family:var(--mono);font-size:10px;text-align:center;padding:20px;">Nenhum grupo</div>';
+    return;
+  }
+  el.innerHTML='';
+  groups.forEach((g,i)=>{
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:6px;padding:7px 10px;border-bottom:1px solid var(--border);cursor:default;';
+    row.draggable=true;
+    row.addEventListener('dragstart',e=>dragGrpStart(e,i));
+    row.addEventListener('dragover', e=>dragGrpOver(e));
+    row.addEventListener('drop',     e=>dragGrpDrop(e,i));
+    const cnt=channels.filter(c=>c.group===g).length;
+    const handle=document.createElement('span');
+    handle.textContent='⠿'; handle.style.cssText='color:var(--tx3);font-size:11px;cursor:grab;flex-shrink:0;';
+    const lbl=document.createElement('span');
+    lbl.textContent=g; lbl.title=g;
+    lbl.style.cssText='font-family:var(--head);font-size:12px;font-weight:600;color:var(--cyan);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+    const cntEl=document.createElement('span');
+    cntEl.textContent=cnt; cntEl.style.cssText='font-family:var(--mono);font-size:9px;color:var(--tx3);';
+    const renBtn=document.createElement('button');
+    renBtn.className='btn btn-ghost btn-xs'; renBtn.textContent='✎';
+    renBtn.addEventListener('click',()=>renameGroup(g));
+    const delBtn=document.createElement('button');
+    delBtn.className='btn btn-red btn-xs'; delBtn.textContent='✕';
+    delBtn.addEventListener('click',()=>deleteGroup(g));
+    row.append(handle,lbl,cntEl,renBtn,delBtn);
+    el.appendChild(row);
+  });
+}
+
+// ══════════════════════════════════════════════
+// RENDER ALL
+// ══════════════════════════════════════════════
+function renderAll(){
+  renderGroupList();
+  renderChannels(qs('search-input')?.value||'');
+  updateStats();
+  updateDBStatus();
+}
+
+// ══════════════════════════════════════════════
+// CHANNEL LIST
+// ══════════════════════════════════════════════
+function renderChannels(filter){
+  filter=(filter||'').toLowerCase();
+  const el=qs('ch-list');
+  if(!channels.length){
+    el.innerHTML='<div class="empty-state"><div class="empty-icon">📡</div><div class="empty-title">Nenhum canal</div><div class="empty-sub">Importe um .m3u, cole ou adicione manualmente</div></div>';
+    if(qs('search-count')) qs('search-count').textContent='—'; return;
+  }
+  const allGrps=[...groups,...channels.map(c=>c.group)
+    .filter(g=>!groups.includes(g)).filter((v,i,a)=>a.indexOf(v)===i)];
+  const byGrp={};
+  channels.forEach((ch,i)=>{
+    const g=ch.group||'Sem grupo';
+    if(!byGrp[g]) byGrp[g]=[];
+    byGrp[g].push({...ch,_i:i});
+  });
+  el.innerHTML=''; let total=0;
+  allGrps.forEach(g=>{
+    const chs=(byGrp[g]||[]).filter(ch=>
+      !filter||ch.name.toLowerCase().includes(filter)||(ch.id||'').toLowerCase().includes(filter));
+    if(!chs.length) return;
+    total+=chs.length;
+    const hdr=document.createElement('div');
+    hdr.className='grp-header';
+    const tog=document.createElement('span'); tog.className='grp-toggle'; tog.textContent='▾';
+    const nm =document.createElement('span'); nm.className='grp-name';  nm.textContent=g;
+    const cnt=document.createElement('span'); cnt.className='grp-count'; cnt.textContent=chs.length;
+    const acts=document.createElement('div'); acts.className='grp-actions';
+    const selBtn=document.createElement('button'); selBtn.className='btn btn-ghost btn-xs'; selBtn.title='Selecionar grupo'; selBtn.textContent='☑';
+    selBtn.addEventListener('click',e=>{ e.stopPropagation(); selGroup(g); });
+    acts.appendChild(selBtn);
+    hdr.append(tog,nm,cnt,acts);
+    const body=document.createElement('div'); body.className='grp-body';
+    chs.forEach(ch=>body.appendChild(buildChRow(ch)));
+    hdr.addEventListener('click',e=>{ if(!e.target.closest('.grp-actions')) body.classList.toggle('hidden'); });
+    // Allow channels to be dragged onto group header to move them
+    hdr.addEventListener('dragover', e=>chDragOverGroup(e,hdr));
+    hdr.addEventListener('dragleave',()=>chDragLeaveGroup(hdr));
+    hdr.addEventListener('drop',     e=>chDropOnGroup(e,g));
+    el.append(hdr,body);
+  });
+  if(qs('search-count')) qs('search-count').textContent=`${total} canais`;
+}
+
+function buildChRow(ch){
+  const i=ch._i, isSel=selSet.has(i);
+  const hasLogo=!!ch.logo, hasEpg=!!ch.id;
+  const row=document.createElement('div');
+  row.className=`ch-row${isSel?' selected':''}${!hasLogo?' warn-logo':''}${!hasEpg?' warn-epg':''}`;
+  row.dataset.idx=i; row.draggable=true;
+  row.addEventListener('dragstart',e=>{ chDragI=i; e.dataTransfer.effectAllowed='move'; });
+  row.addEventListener('dragover', e=>{ e.preventDefault(); row.classList.add('dov'); });
+  row.addEventListener('dragleave',()=>row.classList.remove('dov'));
+  row.addEventListener('drop',     e=>chDrop(e,i,row));
+  row.addEventListener('click',    ()=>{ if(selMode) toggleSel(i); else openChannelEdit(i); });
+
+  const drag=document.createElement('span'); drag.className='ch-drag'; drag.textContent='⠿';
+
+  const chk=document.createElement('div'); chk.className='ch-check';
+  chk.style.display=selMode?'flex':'none';
+  const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=isSel;
+  cb.addEventListener('click',e=>{ e.stopPropagation(); toggleSel(i); });
+  chk.appendChild(cb);
+
+  const logo=document.createElement('div'); logo.className='ch-logo';
+  if(hasLogo){
+    const img=document.createElement('img'); img.src=ch.logo;
+    img.onerror=()=>{ logo.textContent='📺'; };
+    logo.appendChild(img);
+  } else logo.textContent='📺';
+
+  const info=document.createElement('div'); info.className='ch-info';
+  const name=document.createElement('div'); name.className='ch-name'; name.textContent=ch.name;
+  const meta=document.createElement('div'); meta.className='ch-meta';
+  const epgSpan=document.createElement('span'); epgSpan.className=`ch-epg${hasEpg?'':' missing'}`;
+  epgSpan.textContent=hasEpg?ch.id:'sem epg-id';
+  const urlSpan=document.createElement('span'); urlSpan.className='ch-urls';
+  urlSpan.textContent=`🔗 ${ch.urls.length}`;
+  meta.append(epgSpan,urlSpan);
+  if(!hasLogo){ const lg=document.createElement('span'); lg.className='ch-logo-url missing'; lg.textContent='sem logo'; meta.appendChild(lg); }
+  info.append(name,meta);
+
+  const acts=document.createElement('div'); acts.className='ch-actions';
+  const editBtn=document.createElement('button'); editBtn.className='ch-btn edit-btn'; editBtn.title='Editar'; editBtn.textContent='✎';
+  editBtn.addEventListener('click',e=>{ e.stopPropagation(); openChannelEdit(i); });
+  const delBtn=document.createElement('button'); delBtn.className='ch-btn del'; delBtn.title='Remover'; delBtn.textContent='✕';
+  delBtn.addEventListener('click',e=>{ e.stopPropagation(); delChannel(i); });
+  acts.append(editBtn,delBtn);
+
+  row.append(drag,chk,logo,info,acts);
+  return row;
+}
+
+let chDragI=-1;
+function chDrop(e,i,el){
+  e.preventDefault(); el.classList.remove('dov');
+  if(chDragI<0||chDragI===i){ chDragI=-1; return; }
+  const draggedCh=channels[chDragI];
+  const targetCh=channels[i];
+  // If different group: move dragged to target's group, reorder within
+  if(draggedCh&&targetCh&&draggedCh.group!==targetCh.group){
+    channels[chDragI].group=targetCh.group;
+  }
+  const [m]=channels.splice(chDragI,1);
+  const newI=chDragI<i?i-1:i;
+  channels.splice(newI,0,m);
+  chDragI=-1; renderAll(); persist();
+  if(draggedCh&&targetCh&&draggedCh.group!==targetCh.group)
+    toast(`Canal movido para "${targetCh.group}"`,'inf');
+}
+// Drop on group header = move all selected (or dragged) to that group
+function chDropOnGroup(e,g){
+  e.preventDefault();
+  document.querySelectorAll('.grp-header').forEach(h=>h.classList.remove('drag-over'));
+  if(chDragI<0) return;
+  const prev=channels[chDragI]?.group;
+  channels[chDragI].group=g;
+  chDragI=-1; renderAll(); persist();
+  toast(`Canal movido para "${g}"`,'inf');
+}
+function chDragOverGroup(e,hdr){
+  if(chDragI<0) return;
+  e.preventDefault(); e.stopPropagation();
+  document.querySelectorAll('.grp-header').forEach(h=>h.classList.remove('drag-over'));
+  hdr.classList.add('drag-over');
+}
+function chDragLeaveGroup(hdr){
+  hdr.classList.remove('drag-over');
+}
+function filterChannels(){ renderChannels(qs('search-input').value); }
+
+// ══════════════════════════════════════════════
+// SELECTION
+// ══════════════════════════════════════════════
+function toggleSelMode(){
+  selMode=!selMode; selSet.clear();
+  qs('sel-bar').classList.toggle('on',selMode);
+  qs('sel-toggle-btn').textContent=selMode?'✕ Sair sel.':'☑ Selecionar';
+  renderChannels(qs('search-input')?.value||'');
+}
+function toggleSel(i){
+  if(selSet.has(i)) selSet.delete(i); else selSet.add(i);
+  qs('sel-count').textContent=`${selSet.size} sel.`;
+  document.querySelectorAll(`.ch-row[data-idx="${i}"]`).forEach(row=>{
+    row.classList.toggle('selected',selSet.has(i));
+    const cb=row.querySelector('input[type=checkbox]'); if(cb) cb.checked=selSet.has(i);
+  });
+}
+function selGroup(g){
+  if(!selMode) toggleSelMode();
+  channels.forEach((_,i)=>{ if(channels[i].group===g) selSet.add(i); });
+  qs('sel-count').textContent=`${selSet.size} sel.`;
+  document.querySelectorAll('.ch-row').forEach(row=>{
+    const idx=parseInt(row.dataset.idx);
+    if(!isNaN(idx)){ row.classList.toggle('selected',selSet.has(idx)); const cb=row.querySelector('input[type=checkbox]'); if(cb) cb.checked=selSet.has(idx); }
+  });
+}
+function clearSel(){
+  selMode=false; selSet.clear();
+  qs('sel-bar').classList.remove('on');
+  qs('sel-toggle-btn').textContent='☑ Selecionar';
+  renderChannels(qs('search-input')?.value||'');
+}
+function deleteSelected(){
+  const idxs=[...selSet].sort((a,b)=>b-a);
+  idxs.forEach(i=>channels.splice(i,1));
+  clearSel(); renderAll(); persist();
+  toast(`${idxs.length} canal(is) removido(s)`,'inf');
+}
+
+// ══════════════════════════════════════════════
+// BULK FLOATING PANEL (position:fixed)
+// ══════════════════════════════════════════════
+function openBulkDD(type,btn){
+  if(!selSet.size){ toast('Selecione canais primeiro','warn'); return; }
+  const float=qs('bulk-float');
+  if(float.style.display!=='none'&&_bulkType===type){ closeBulkFloat(); return; }
+  _bulkType=type;
+  if(type==='logo'&&!Object.keys(LOGOS).length){ toast('Carregue logos na aba Database','warn'); return; }
+  if(type==='epg' &&!Object.keys(EPG).length){   toast('Carregue EPG na aba Database','warn');  return; }
+  if(type==='grp' &&!groups.length){              toast('Crie grupos primeiro','warn');           return; }
+  const rect=btn.getBoundingClientRect();
+  float.style.display='block';
+  float.style.width=(type==='grp'?'220':'300')+'px';
+  let left=rect.left;
+  if(left+parseInt(float.style.width)>window.innerWidth-8) left=window.innerWidth-parseInt(float.style.width)-8;
+  float.style.left=left+'px'; float.style.top='0px';
+  const qEl=qs('bulk-float-q');
+  qEl.value='';
+  qEl.placeholder=type==='logo'?'Buscar logo...':type==='epg'?'Buscar EPG-id...':'Buscar grupo...';
+  renderBulkList('');
+  requestAnimationFrame(()=>{
+    const fh=float.offsetHeight;
+    let top=rect.top-fh-6; if(top<10) top=rect.bottom+6;
+    float.style.top=top+'px'; qEl.focus();
+  });
+}
+function filterBulkFloat(q){ renderBulkList(q); }
+function renderBulkList(q){
+  q=(q||'').toLowerCase();
+  const el=qs('bulk-float-list'); el.innerHTML='';
+  if(_bulkType==='logo'){
+    const keys=Object.keys(LOGOS).filter(k=>!q||k.includes(q));
+    if(!keys.length){ el.innerHTML='<div class="dd-empty">Nenhuma logo</div>'; return; }
+    keys.slice(0,80).forEach(k=>{
+      const item=document.createElement('div'); item.className='dd-item';
+      const img=document.createElement('img');
+      img.src=LOGOS[k]; img.style.cssText='width:28px;height:20px;object-fit:contain;border-radius:2px;background:rgba(0,0,0,.4);flex-shrink:0;';
+      img.onerror=()=>img.remove();
+      const lbl=document.createElement('span'); lbl.className='dd-val'; lbl.textContent=k;
+      item.append(img,lbl);
+      item.addEventListener('click',()=>{
+        const url=LOGOS[k],cnt=selSet.size;
+        selSet.forEach(i=>{ channels[i].logo=url; });
+        closeBulkFloat(); renderAll(); persist();
+        toast(`Logo "${k}" → ${cnt} canal(is)`,'suc');
+      });
+      el.appendChild(item);
+    });
+  } else if(_bulkType==='epg'){
+    const keys=Object.keys(EPG).filter(k=>!q||k.includes(q)||EPG[k].toLowerCase().includes(q));
+    if(!keys.length){ el.innerHTML='<div class="dd-empty">Nenhum EPG ID</div>'; return; }
+    keys.slice(0,100).forEach(k=>{
+      const item=document.createElement('div'); item.className='dd-item';
+      const lbl=document.createElement('span'); lbl.className='dd-val'; lbl.textContent=k;
+      const id =document.createElement('span'); id.className='dd-id';  id.textContent=EPG[k];
+      item.append(lbl,id);
+      item.addEventListener('click',()=>{
+        const epgId=EPG[k],cnt=selSet.size;
+        selSet.forEach(i=>{ channels[i].id=epgId; });
+        closeBulkFloat(); renderAll(); persist();
+        toast(`EPG "${epgId}" → ${cnt} canal(is)`,'suc');
+      });
+      el.appendChild(item);
+    });
+  } else if(_bulkType==='grp'){
+    groups.forEach(g=>{
+      const item=document.createElement('div'); item.className='dd-item'; item.textContent=g;
+      item.addEventListener('click',()=>{
+        const cnt=selSet.size;
+        selSet.forEach(i=>{ channels[i].group=g; });
+        closeBulkFloat(); clearSel(); renderAll(); persist();
+        toast(`${cnt} canal(is) → "${g}"`,'suc');
+      });
+      el.appendChild(item);
+    });
+  }
+}
+function closeBulkFloat(){ qs('bulk-float').style.display='none'; _bulkType=''; }
+document.addEventListener('click',e=>{
+  const bf=qs('bulk-float');
+  if(bf&&bf.style.display!=='none'&&!e.target.closest('#bulk-float')&&!e.target.closest('.sel-bar'))
+    closeBulkFloat();
+});
+function bulkClearLogo(){
+  if(!selSet.size){ toast('Selecione canais','warn'); return; }
+  selSet.forEach(i=>{ channels[i].logo=''; }); renderAll(); persist();
+  toast(`Logo removida de ${selSet.size} canal(is)`,'inf');
+}
+function bulkClearEpg(){
+  if(!selSet.size){ toast('Selecione canais','warn'); return; }
+  selSet.forEach(i=>{ channels[i].id=''; }); renderAll(); persist();
+  toast(`EPG-id removido de ${selSet.size} canal(is)`,'inf');
+}
+
+// ══════════════════════════════════════════════
+// CHANNEL EDITOR (right panel)
+// ══════════════════════════════════════════════
+function openAddChannel(){
+  if(!groups.length){ toast('Crie um grupo primeiro','warn'); return; }
+  channels.push({name:'NOVO CANAL',id:'',logo:'',group:groups[0],urls:['']});
+  renderAll();
+  openChannelEdit(channels.length-1);
+}
+
+function openChannelEdit(i){
+  activeIdx=i;
+  const ch=channels[i];
+  const ep=qs('edit-panel-content');
+  const hasL=Object.keys(LOGOS).length>0;
+  const hasE=Object.keys(EPG).length>0;
+
+  // Build group options
+  const grpOpts=groups.map(g=>`<option value="${esc(g)}"${ch.group===g?' selected':''}>${esc(g)}</option>`).join('');
+
+  // Build URL rows
+  const urlRows=ch.urls.map(u=>`
+    <div class="url-row">
+      <input type="url" class="ep-url" value="${esc(u)}" placeholder="http://...">
+      <button class="url-rm" onclick="this.parentElement.remove()">×</button>
+    </div>`).join('');
+
+  ep.innerHTML=`
+    <div class="ep-header">
+      <div class="ep-ch-name" id="ep-hdr-name">${esc(ch.name)}</div>
+      <div class="ep-ch-group">📁 ${esc(ch.group)}</div>
+    </div>
+    <div class="edit-panel-inner">
+
+      <div class="field">
+        <label>Nome</label>
+        <input type="text" id="ep-name" value="${esc(ch.name)}">
+      </div>
+
+      <div class="field">
+        <label>Grupo</label>
+        <div style="display:flex;gap:5px;">
+          <select id="ep-group" style="flex:1">${grpOpts}</select>
+          <input type="text" id="ep-newgrp" placeholder="Novo grupo" style="flex:1">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>EPG-id (tvg-id)</label>
+        <div style="display:flex;gap:5px;">
+          <input type="text" id="ep-id" value="${esc(ch.id)}" placeholder="ex: Globo.br" style="flex:1">
+          ${hasE?'<button class="btn btn-ghost btn-sm" id="ep-epg-btn">📡</button>':''}
+        </div>
+        <div id="ep-epg-dd" style="display:none;border:1px solid var(--border3);border-radius:4px;background:#0a1020;margin-top:4px;overflow:hidden;max-height:220px;display:none;">
+          <div style="padding:6px;border-bottom:1px solid var(--border);">
+            <input type="text" id="ep-epg-q" placeholder="Buscar EPG..." style="width:100%;font-size:10px;">
+          </div>
+          <div id="ep-epg-list" style="max-height:160px;overflow-y:auto;"></div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Logo</label>
+        <div style="display:flex;gap:5px;align-items:flex-start;">
+          <div class="logo-preview-box" id="ep-logo-prev">
+            ${ch.logo?`<img src="${esc(ch.logo)}" onerror="this.parentElement.innerHTML='📷'">`:' 📷'}
+          </div>
+          <div style="flex:1;">
+            <div style="display:flex;gap:4px;margin-bottom:4px;">
+              <input type="url" id="ep-logo" value="${esc(ch.logo)}" placeholder="https://..." style="flex:1;font-size:10px;">
+              ${hasL?'<button class="btn btn-ghost btn-sm" id="ep-logo-btn">🖼</button>':''}
+            </div>
+            <div id="ep-logo-dd" style="display:none;border:1px solid var(--border3);border-radius:4px;background:#0a1020;overflow:hidden;">
+              <div style="padding:6px;border-bottom:1px solid var(--border);">
+                <input type="text" id="ep-logo-q" placeholder="Buscar logo..." style="width:100%;font-size:10px;">
+              </div>
+              <div id="ep-logo-list" style="max-height:160px;overflow-y:auto;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>URLs do Stream</label>
+        <div id="ep-urls">${urlRows}</div>
+        <button class="add-url" onclick="addUrlRow()">+ URL</button>
+      </div>
+
+      <div style="display:flex;gap:6px;margin-top:8px;">
+        <button class="btn btn-cyan" style="flex:1" onclick="saveChannel(${i})">✓ Salvar</button>
+        <button class="btn btn-ghost btn-sm" onclick="autoFillChannel(${i})" title="Auto-preencher">✦ Auto</button>
+      </div>
+      <div style="margin-top:6px;">
+        <button class="btn btn-red btn-sm" style="width:100%" onclick="delChannel(${i})">🗑 Remover canal</button>
+      </div>
+
+    </div>`;
+
+  // Wire logo input → preview
+  qs('ep-logo').addEventListener('input', updateLogoPreview);
+
+  // Wire EPG dropdown
+  if(hasE){
+    qs('ep-epg-btn')?.addEventListener('click',()=>{
+      const dd=qs('ep-epg-dd');
+      const open=dd.style.display==='block';
+      dd.style.display=open?'none':'block';
+      if(!open){ fillEpgDD(''); qs('ep-epg-q').focus(); }
+    });
+    qs('ep-epg-q')?.addEventListener('input',function(){ fillEpgDD(this.value); });
+  }
+
+  // Wire Logo dropdown
+  if(hasL){
+    qs('ep-logo-btn')?.addEventListener('click',()=>{
+      const dd=qs('ep-logo-dd');
+      const open=dd.style.display==='block';
+      dd.style.display=open?'none':'block';
+      if(!open){ fillLogoDD(''); qs('ep-logo-q').focus(); }
+    });
+    qs('ep-logo-q')?.addEventListener('input',function(){ fillLogoDD(this.value); });
+  }
+}
+
+function fillLogoDD(q){
+  q=(q||'').toLowerCase();
+  const el=qs('ep-logo-list'); if(!el) return;
+  const keys=Object.keys(LOGOS).filter(k=>!q||k.includes(q));
+  if(!keys.length){ el.innerHTML='<div class="dd-empty">Nenhuma logo</div>'; return; }
+  el.innerHTML='';
+  keys.slice(0,60).forEach(k=>{
+    const item=document.createElement('div'); item.className='dd-item';
+    const img=document.createElement('img');
+    img.src=LOGOS[k]; img.style.cssText='width:24px;height:18px;object-fit:contain;flex-shrink:0;background:rgba(0,0,0,.4);border-radius:2px;';
+    img.onerror=()=>img.remove();
+    const lbl=document.createElement('span'); lbl.className='dd-val'; lbl.textContent=k;
+    item.append(img,lbl);
+    item.addEventListener('click',()=>{
+      const inp=qs('ep-logo'); if(inp){ inp.value=LOGOS[k]; updateLogoPreview(); }
+      qs('ep-logo-dd').style.display='none';
+    });
+    el.appendChild(item);
+  });
+}
+
+function fillEpgDD(q){
+  q=(q||'').toLowerCase();
+  const el=qs('ep-epg-list'); if(!el) return;
+  const keys=Object.keys(EPG).filter(k=>!q||k.includes(q)||EPG[k].toLowerCase().includes(q));
+  if(!keys.length){ el.innerHTML='<div class="dd-empty">Nenhum EPG</div>'; return; }
+  el.innerHTML='';
+  keys.slice(0,80).forEach(k=>{
+    const item=document.createElement('div'); item.className='dd-item';
+    const lbl=document.createElement('span'); lbl.className='dd-val'; lbl.textContent=k;
+    const id =document.createElement('span'); id.className='dd-id';  id.textContent=EPG[k];
+    item.append(lbl,id);
+    item.addEventListener('click',()=>{
+      const inp=qs('ep-id'); if(inp) inp.value=EPG[k];
+      qs('ep-epg-dd').style.display='none';
+    });
+    el.appendChild(item);
+  });
+}
+
+function updateLogoPreview(){
+  const v=qs('ep-logo')?.value, p=qs('ep-logo-prev'); if(!p) return;
+  p.innerHTML=v?`<img src="${esc(v)}" onerror="this.parentElement.innerHTML='📷'">`:' 📷';
+}
+function addUrlRow(){
+  const d=document.createElement('div'); d.className='url-row';
+  d.innerHTML='<input type="url" class="ep-url" placeholder="http://..."><button class="url-rm" onclick="this.parentElement.remove()">×</button>';
+  qs('ep-urls').appendChild(d);
+}
+function saveChannel(i){
+  const rawName=qs('ep-name')?.value.trim(); if(!rawName){ toast('Nome obrigatório','err'); return; }
+  const name=stdName(rawName);
+  const rawNewGrp=qs('ep-newgrp')?.value.trim();
+  let grp=qs('ep-group')?.value||groups[0]||'GERAL';
+  if(rawNewGrp){ grp=stdGroup(rawNewGrp); if(!groups.includes(grp)) groups.push(grp); }
+  const id=qs('ep-id')?.value.trim()||'';
+  const logo=qs('ep-logo')?.value.trim()||'';
+  const urls=[...document.querySelectorAll('.ep-url')].map(inp=>inp.value.trim()).filter(Boolean);
+  if(!urls.length){ toast('Adicione ao menos uma URL','err'); return; }
+  channels[i]={name,id,logo,group:grp,urls};
+  renderAll(); persist(); openChannelEdit(i); toast(`"${name}" salvo`,'suc');
+}
+function delChannel(i){
+  channels.splice(i,1); activeIdx=null;
+  qs('edit-panel-content').innerHTML='<div class="ep-none"><div class="ep-icon">✎</div><p>Clique em um canal<br>para editar</p></div>';
+  renderAll(); persist(); toast('Canal removido','inf');
+}
+function autoFillChannel(i){
+  const name=qs('ep-name')?.value||channels[i].name;
+  let msgs=[];
+  if(Object.keys(EPG).length){
+    const m=bestEpg(name);
+    if(m){ const el=qs('ep-id'); if(el) el.value=m.id; msgs.push(`EPG: ${m.id} (${(m.score*100).toFixed(0)}%)`); }
+    else msgs.push('EPG: sem match');
+  }
+  if(Object.keys(LOGOS).length){
+    const m=bestLogo(name);
+    if(m){ const el=qs('ep-logo'); if(el){ el.value=m.url; updateLogoPreview(); } msgs.push(`Logo: ${m.key} (${(m.score*100).toFixed(0)}%)`); }
+    else msgs.push('Logo: sem match');
+  }
+  toast(msgs.join(' · ')||'Sem database','inf',4000);
+}
+
+// ══════════════════════════════════════════════
+// M3U IMPORT
+// ══════════════════════════════════════════════
+function loadM3UFile(inp){
+  if(!inp.files[0]) return;
+  const r=new FileReader(); r.onload=ev=>importM3U(ev.target.result); r.readAsText(inp.files[0],'UTF-8'); inp.value='';
+}
+function handleM3UDrop(files){
+  Array.from(files).forEach(f=>{ const r=new FileReader(); r.onload=ev=>importM3U(ev.target.result); r.readAsText(f,'UTF-8'); });
+}
+function parsePastedM3U(){
+  const t=qs('paste-area').value.trim(); if(!t){ toast('Cole M3U primeiro','warn'); return; }
+  importM3U(t); qs('paste-area').value='';
+}
+function importM3U(text){
+  const lines=text.split(/\r?\n/);
+  let inf=null, added=0, merged=0;
+  lines.forEach(line=>{
+    line=line.trim();
+    if(line.startsWith('#EXTINF')){ inf=line; }
+    else if(inf&&/^(https?|rtmp|udp|rtp):/.test(line)){
+      const rawName=(inf.match(/,(.+)$/)||[])[1]?.trim()||'CANAL';
+      const name=stdName(rawName);
+      const tvgId=(inf.match(/tvg-id="([^"]*)"/)||[])[1]||'';
+      let   logo =(inf.match(/tvg-logo="([^"]*)"/)||[])[1]||'';
+      const rawGroup=(inf.match(/group-title="([^"]*)"/)||[])[1]||'IMPORTADOS';
+      const group=stdGroup(rawGroup);
+      if(!groups.includes(group)) groups.push(group);
+      if(!logo){ const m=bestLogo(name); if(m) logo=m.url; }
+      const finalId=tvgId||bestEpg(name)?.id||'';
+      const existing=channels.find(c=>c.urls.includes(line));
+      if(existing){ if(!existing.logo&&logo) existing.logo=logo; if(!existing.id&&finalId) existing.id=finalId; merged++; }
+      else { channels.push({name,id:finalId,logo,group,urls:[line]}); added++; }
+      inf=null;
+    }
+  });
+  channels.forEach(c=>{ if(!groups.includes(c.group)) groups.push(c.group); });
+  renderAll(); persist();
+  toast(`${added} importado(s)${merged?` · ${merged} mesclado(s)`:''}`,added>0?'suc':'warn');
+}
+
+// ══════════════════════════════════════════════
+// DATABASE — LOGOS
+// ══════════════════════════════════════════════
+function ghURL(filename){
+  const u=qs('gh-user')?.value.trim()||'user';
+  const r=qs('gh-repo')?.value.trim()||'repo';
+  const f=qs('gh-folder')?.value.trim()||'logo';
+  const b=qs('gh-branch')?.value.trim()||'main';
+  return `https://raw.githubusercontent.com/${u}/${r}/refs/heads/${b}/${f}/${filename}`;
+}
+function refreshLogoURLs(){ renderLogosTable(); }
+function loadLogoImages(files){
+  const exts=['png','jpg','jpeg','webp','svg','gif','avif'];
+  let added=0;
+  Array.from(files).forEach(f=>{
+    const ext=f.name.split('.').pop().toLowerCase();
+    if(!exts.includes(ext)) return;
+    LOGOS[slug(f.name.replace(/\.[^.]+$/,''))]=ghURL(f.name); added++;
+  });
+  renderLogosTable(); updateDBStatus(); persist(); toast(`${added} logo(s) adicionada(s)`,'suc');
+}
+function handleLogosJSONDrop(files){
+  const f=files[0]; if(!f) return;
+  const r=new FileReader(); r.onload=ev=>parseLogosJSON(ev.target.result); r.readAsText(f);
+}
+function loadLogosJSON(inp){
+  const f=inp.files[0]; if(!f) return;
+  const r=new FileReader(); r.onload=ev=>parseLogosJSON(ev.target.result); r.readAsText(f); inp.value='';
+}
+function parseLogosJSON(txt){
+  try{
+    const data=JSON.parse(txt);
+    const src=data.logos||data;
+    Object.assign(LOGOS,src);
+    if(data.epg) Object.assign(EPG,data.epg);
+    renderLogosTable(); renderEPGTable(); updateDBStatus(); persist();
+    toast(`${Object.keys(LOGOS).length} logos carregadas`,'suc');
+  }catch(e){ toast('Erro no JSON de logos','err'); }
+}
+function renderLogosTable(){
+  const tbody=qs('logos-tbody'); if(!tbody) return;
+  const keys=Object.keys(LOGOS);
+  if(qs('logo-count-badge')) qs('logo-count-badge').textContent=keys.length;
+  if(!keys.length){
+    tbody.innerHTML='<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--tx3);font-family:var(--mono);font-size:10px;">Nenhuma logo</td></tr>'; return;
+  }
+  tbody.innerHTML=keys.map(k=>{
+    const ext=(LOGOS[k].split('.').pop().split('?')[0]||'').toLowerCase().substring(0,4);
+    return `<tr><td><img class="td-logo-thumb" src="${esc(LOGOS[k])}" onerror="this.src=''"></td>
+      <td class="td-id">${esc(k)}</td>
+      <td><span class="badge badge-${ext}">${ext.toUpperCase()||'IMG'}</span></td>
+      <td class="td-url" title="${esc(LOGOS[k])}">${esc(LOGOS[k])}</td></tr>`;
+  }).join('');
+}
+function exportLogosJSON(){ dlFile(JSON.stringify(LOGOS,null,2),'logos.json','application/json'); toast('logos.json exportado','suc'); }
+function clearLogos(){
+  if(!confirm('Limpar todas as logos?')) return;
+  LOGOS={}; renderLogosTable(); updateDBStatus(); persist(); toast('Logos limpas','inf');
+}
+
+// ══════════════════════════════════════════════
+// DATABASE — EPG
+// ══════════════════════════════════════════════
+function loadEPGXML(files){
+  Array.from(files).forEach(f=>{
+    const label=f.name.toLowerCase().includes('brazil1')||f.name.includes('br1')?'BR1':
+                f.name.toLowerCase().includes('brazil4')||f.name.includes('br4')?'BR4':f.name;
+    log(`Lendo ${f.name} (${(f.size/1024).toFixed(0)}KB)`,'inf');
+    const r=new FileReader(); r.onload=ev=>parseEPGXML(ev.target.result,label); r.readAsText(f,'UTF-8');
+  });
+}
+function parseEPGXML(text,label){
+  let count=0;
+  try{
+    const doc=new DOMParser().parseFromString(text,'text/xml');
+    doc.querySelectorAll('channel').forEach(ch=>{
+      const id=ch.getAttribute('id'); if(!id) return;
+      const name=(ch.querySelector('display-name')||{}).textContent?.trim()||'';
+      // Index by slug of display name
+      if(name){ const k=slug(name); if(k&&!EPG[k]){ EPG[k]=id; count++; } }
+      // Index by slug of channel id (often has meaningful name like "Globo.br")
+      const ki=slug(id); if(ki&&!EPG[ki]){ EPG[ki]=id; if(!name) count++; }
+      // Index by normalized name (noise stripped) for better matching
+      if(name){ const kn=slug(name).replace(/\b(hd|fhd|4k|uhd|sd|plus|ao|vivo|live|br|brasil|brazil|hd2|h265|hevc|full)\b/g,'').replace(/-+/g,'-').replace(/^-+|-+$/g,''); if(kn&&kn!==slug(name)&&!EPG[kn]) EPG[kn]=id; }
+    });
+  }catch(e){
+    const rx=/<channel[^>]+id="([^"]+)"/g;
+    const nx=/<display-name[^>]*>([^<]+)<\/display-name>/g;
+    const names=[]; let m;
+    while((m=nx.exec(text))!==null) names.push(m[1].trim());
+    let idx=0;
+    while((m=rx.exec(text))!==null){
+      const id=m[1],name=names[idx]||'';
+      const k=slug(name||id); if(k&&!EPG[k]){ EPG[k]=id; count++; }
+      const ki=slug(id); if(ki&&ki!==k&&!EPG[ki]) EPG[ki]=id; idx++;
+    }
+  }
+  renderEPGTable(); updateDBStatus(); persist();
+  log(`${label}: ${count} IDs carregados`,'suc');
+  toast(`${count} EPG IDs (${label})`,'suc');
+}
+function handleEPGJSONDrop(files){
+  const f=files[0]; if(!f) return;
+  const r=new FileReader(); r.onload=ev=>parseEPGJSON(ev.target.result); r.readAsText(f);
+}
+function loadEPGJSON(inp){
+  const f=inp.files[0]; if(!f) return;
+  const r=new FileReader(); r.onload=ev=>parseEPGJSON(ev.target.result); r.readAsText(f); inp.value='';
+}
+function parseEPGJSON(txt){
+  try{
+    const data=JSON.parse(txt);
+    if(data.epg)   Object.assign(EPG,data.epg);
+    if(data.logos) Object.assign(LOGOS,data.logos);
+    if(!data.epg&&!data.logos) Object.assign(EPG,data);
+    renderEPGTable(); renderLogosTable(); updateDBStatus(); persist();
+    toast(`${Object.keys(EPG).length} EPG IDs carregados`,'suc');
+  }catch(e){ toast('Erro no JSON de EPG','err'); }
+}
+function renderEPGTable(){
+  const tbody=qs('epg-tbody'); if(!tbody) return;
+  const q=(qs('epg-filter')?.value||'').toLowerCase();
+  const keys=Object.keys(EPG).filter(k=>!q||k.includes(q)||EPG[k].toLowerCase().includes(q));
+  if(qs('epg-count-badge')) qs('epg-count-badge').textContent=Object.keys(EPG).length;
+  if(!keys.length){
+    tbody.innerHTML='<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--tx3);font-family:var(--mono);font-size:10px;">Sem resultados</td></tr>'; return;
+  }
+  tbody.innerHTML=keys.slice(0,300).map(k=>`<tr>
+    <td class="td-id">${esc(k)}</td><td class="td-name">${esc(EPG[k])}</td>
+    <td><span class="badge badge-xml">EPG</span></td></tr>`).join('');
+}
+function exportEPGJSON(){ dlFile(JSON.stringify(EPG,null,2),'epg.json','application/json'); toast('epg.json exportado','suc'); }
+function exportAllDB(){ dlFile(JSON.stringify({logos:LOGOS,epg:EPG},null,2),'iptv-database.json','application/json'); toast('iptv-database.json exportado','suc'); }
+function clearEPG(){
+  if(!confirm('Limpar EPG?')) return;
+  EPG={}; renderEPGTable(); updateDBStatus(); persist(); toast('EPG limpo','inf');
+}
+
+// ══════════════════════════════════════════════
+// OUTPUT
+// ══════════════════════════════════════════════
+function buildM3U(){
+  const allGrps=[...groups,...channels.map(c=>c.group)
+    .filter(g=>!groups.includes(g)).filter((v,i,a)=>a.indexOf(v)===i)];
+  const byGrp={};
+  channels.forEach(ch=>{ if(!byGrp[ch.group]) byGrp[ch.group]=[]; byGrp[ch.group].push(ch); });
+  let raw='#EXTM3U';
+  if(epgUrls.length) raw+=` url-tvg="${epgUrls.join(',')}"`;
+  raw+='\n';
+  allGrps.forEach(g=>{
+    (byGrp[g]||[]).forEach(ch=>{
+      ch.urls.forEach(url=>{
+        if(!url) return;
+        raw+='#EXTINF:-1';
+        if(ch.id)    raw+=` tvg-id="${ch.id}"`;
+        if(ch.name)  raw+=` tvg-name="${ch.name}"`;
+        if(ch.logo)  raw+=` tvg-logo="${ch.logo}"`;
+        if(ch.group) raw+=` group-title="${ch.group}"`;
+        raw+=`,${ch.name}\n${url}\n`;
+      });
+    });
+  });
+  return raw;
+}
+function buildOutput(){
+  const raw=buildM3U();
+  const html=raw.split('\n').map(l=>{
+    if(l.startsWith('#EXTM3U')) return`<span class="m3u-ext">${esc(l)}</span>`;
+    if(l.startsWith('#EXTINF'))
+      return l.replace(/(tvg-id|tvg-name|tvg-logo|group-title|url-tvg)=/g,'<span class="m3u-attr">$1</span>=')
+               .replace(/"([^"]*)"/g,'"<span class="m3u-val">$1</span>"')
+               .replace(/^(#EXTINF[^,]+),(.+)$/,'<span class="m3u-ext">$1,</span><span class="m3u-name">$2</span>');
+    if(/^(https?|rtmp|udp|rtp):/.test(l)) return`<span class="m3u-url">${esc(l)}</span>`;
+    return esc(l);
+  }).join('\n');
+  qs('m3u-code').innerHTML=html;
+  updateStats();
+}
+function downloadM3U(){
+  if(!channels.length){ toast('Nenhum canal','err'); return; }
+  dlFile(buildM3U(),'lista_iptv.m3u','audio/x-mpegurl'); toast('lista_iptv.m3u baixado','suc');
+}
+function copyM3U(){ navigator.clipboard.writeText(buildM3U()).then(()=>toast('M3U copiado!','suc')); }
+
+function addEPGUrl(){
+  const v=qs('out-epg-url')?.value.trim(); if(!v) return;
+  if(!epgUrls.includes(v)) epgUrls.push(v);
+  qs('out-epg-url').value=''; renderEPGUrlList(); persist();
+}
+function renderEPGUrlList(){
+  const el=qs('epg-urls-list'); if(!el) return;
+  el.innerHTML='';
+  epgUrls.forEach((u,i)=>{
+    const row=document.createElement('div'); row.style.cssText='display:flex;gap:5px;align-items:center;margin-bottom:4px;';
+    const inp=document.createElement('input'); inp.type='url'; inp.value=u; inp.style.cssText='flex:1;font-size:10px;';
+    inp.addEventListener('change',()=>{ epgUrls[i]=inp.value; persist(); });
+    const rm=document.createElement('button'); rm.className='url-rm'; rm.textContent='×';
+    rm.addEventListener('click',()=>{ epgUrls.splice(i,1); renderEPGUrlList(); persist(); });
+    row.append(inp,rm); el.appendChild(row);
+  });
+}
+
+// ══════════════════════════════════════════════
+// STATS & STATUS
+// ══════════════════════════════════════════════
+function updateStats(){
+  const total=channels.length, grps=new Set(channels.map(c=>c.group)).size;
+  const logos=channels.filter(c=>c.logo).length, epgs=channels.filter(c=>c.id).length;
+  const urls=channels.reduce((a,c)=>a+c.urls.length,0);
+  const set=(id,v)=>{ const el=qs(id); if(el) el.textContent=v; };
+  set('badge-ch',total);
+  set('badge-db',Object.keys(LOGOS).length+Object.keys(EPG).length);
+  set('stat-total',total); set('stat-grps',grps); set('stat-logos',logos);
+  set('stat-epgs',epgs); set('stat-nologos',total-logos); set('stat-noepgs',total-epgs); set('stat-urls',urls);
+}
+function updateDBStatus(){
+  const lc=Object.keys(LOGOS).length, ec=Object.keys(EPG).length;
+  const pill=qs('db-status-pill'), txt=qs('db-status-txt'); if(!pill||!txt) return;
+  if(lc||ec){ pill.classList.add('live'); txt.textContent=`${lc} logos · ${ec} EPGs`; }
+  else { pill.classList.remove('live'); txt.textContent='sem database'; }
+}
+
+// ══════════════════════════════════════════════
+// BACKUP
+// ══════════════════════════════════════════════
+function exportBackup(){
+  dlFile(JSON.stringify({channels,groups,LOGOS,EPG,epgUrls,at:new Date().toISOString()},null,2),
+    'iptv-forge-backup.json','application/json');
+  toast('Backup exportado','suc');
+}
+function loadBackupFile(inp){
+  const f=inp.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const d=JSON.parse(ev.target.result);
+      if(d.channels) channels=d.channels; if(d.groups) groups=d.groups;
+      if(d.LOGOS)    LOGOS=d.LOGOS;       if(d.EPG)    EPG=d.EPG;
+      if(d.epgUrls)  epgUrls=d.epgUrls;
+      renderAll(); renderLogosTable(); renderEPGTable(); renderEPGUrlList(); persist();
+      toast('Backup carregado','suc');
+    }catch(e){ toast('Erro ao ler backup','err'); }
+  };
+  r.readAsText(f,'UTF-8'); inp.value='';
+}
+function handleBackupDrop(files){
+  const f=files[0]; if(!f) return; loadBackupFile({files:[f]});
+}
+function clearAll(){
+  if(!confirm('Remover todos os canais e grupos?')) return;
+  channels=[]; groups=[]; renderAll(); persist(); toast('Tudo limpo','inf');
+}
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+restore();
+renderAll();
+renderLogosTable();
+renderEPGTable();
+renderEPGUrlList();
+updateDBStatus();
+window.addEventListener('beforeunload', persist);
+document.addEventListener('keydown', e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key==='s'){ e.preventDefault(); persist(); toast('Salvo','inf',1500); }
+  if((e.ctrlKey||e.metaKey)&&e.key==='e'){
+    e.preventDefault();
+    navTo('output', document.querySelectorAll('.nav-item')[2]);
+    buildOutput();
+  }
+  if(e.key==='Escape') closeBulkFloat();
+});
+</script>
+</body>
+</html>
